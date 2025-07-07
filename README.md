@@ -6,8 +6,32 @@ Team 5 is building a flashcard web app for the CSCI 3308 final project
 ## Product Requirements Document
 [View the PRD](planning/PRD.md)
 
-## Entity-Relationship Diagram
-![ERD](planning/ERD.png)
+## Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    users {
+        int id PK
+        varchar(100) email
+        text password_hash
+    }
+
+    decks {
+        int id PK
+        int user_id FK
+        varchar(50) title
+    }
+
+    flashcards {
+        int id PK
+        int deck_id FK
+        text question
+        text answer
+    }
+
+    users ||--o{ decks : "has"
+    decks ||--o{ flashcards : "contains"
+```
 
 ## Figma Mockups
 <table style="width:100%">
@@ -32,7 +56,7 @@ Team 5 is building a flashcard web app for the CSCI 3308 final project
       <img src="mockup/dashboard-add-deck.png" alt="Dashboard Add Deck" style="width:100%;"/>
     </td>
     <td style="padding:10px; width: 50%;">
-      <img src="mockup/edit deck.png" alt="Edit Deck" style="width:100%;"/>
+      <img src="mockup/edit-deck.png" alt="Edit Deck" style="width:100%;"/>
     </td>
   </tr>
   <tr>
