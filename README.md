@@ -1,7 +1,7 @@
 # Team Check-In for Sunday, July 6th
 
 ## Project Overview
-Team 5 is build a flashcard web app for the CSCI 3308 final project
+Team 5 is building a flashcard web app for the CSCI 3308 final project
 
 ## Product Requirements Document
 [View the PRD](planning/PRD.md)
