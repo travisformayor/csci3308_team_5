@@ -35,10 +35,32 @@ This section outlines the planned features that will be turned in.
 
 ## 4. Database Overview
 
-Three tables currently planned:
-*   Users
-*   Decks
-*   Cards
+### Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    users {
+        int id PK
+        varchar(100) email
+        text password_hash
+    }
+
+    decks {
+        int id PK
+        int user_id FK
+        varchar(50) title
+    }
+
+    flashcards {
+        int id PK
+        int deck_id FK
+        text question
+        text answer
+    }
+
+    users ||--o{ decks : "has"
+    decks ||--o{ flashcards : "contains"
+```
 
 ## 5. API Endpoints
 
@@ -69,25 +91,22 @@ Three tables currently planned:
 ## 7. User Flows
 
 ### User Registration and Login
-Home page when not logged in: A dedicated login page that has options for login or register. Register is a different page. Once you register, it redirects to the login page. Login page redirects you to the dashboard (if auth is successful). Dashboard page (and view deck, study deck, and create card pages) all have a nav bar at the top with a Dashboard redirect button and a logout button.
+The home page for unauthenticated users is a landing page with options to "Sign In" or "Register". Clicking these buttons takes the user to the respective pages. After a successful login, the user is redirected to their dashboard. All authenticated pages (Dashboard, Edit Deck, Study Mode) have a navigation bar with a link to the Home, Dashboard and a "Logout" button.
 
 ### Create a New Deck
-On the dashboard, when logged in, there is a button that says Create Deck. Redirects to a create deck page where the user puts in a name for the deck. Once created, it shows up on the dashboard as empty. Each deck on the dashboard is displayed as a list of Deck names and has a “view” and “study” button. If a Deck is empty, the study button is disabled.
+On the dashboard, the logged-in user clicks the "Add New Deck" button. This action reveals an inline form with a text input for the deck's name, a "Save" button, and a "Cancel" button. Clicking "Save" creates the new deck and redirects the user to the Edit Deck page for the newly created deck, which starts with one blank card ready for input. Clicking "Cancel" reverts the view to just show the "Add New Deck" button.
 
 ### Delete a Deck
-On the dashboard, when logged in, there is a trash can button next to each deck. Clicking it deletes the deck and all of its cards. (Stretch goal: confirmation dialog before deck deletes.)
+On the dashboard, when logged in, there is a "Delete" button next to each deck. Clicking it deletes the deck and all of its cards. (Stretch goal: confirmation dialog before deck deletes.)
 
-### Viewing a Deck
-On the dashboard, the user clicks the view deck button. Opening the Deck page sends a request for the cards in that Deck. This takes the user to the Deck page. Deck page at the top shows the deck name, the number of cards, and an “Add Card” button. Below that, shows a vertical display of every card with question and answer visible and an edit and delete button for each.
+### Editing a Deck
+On the dashboard, the user clicks the "Edit" button next to each deck. This takes the user to the Edit Deck page. The page displays the deck's title at the top left. It also has "Add new Card", "Save Card", and "Delete Card" buttons. Below, the "Previous" and "Next" buttons allow the user to look at all cards belonging to the deck.
 
-### Create a Card
-At the top of the Deck page, the user clicks the “Add Card” button which opens the Create Card page. This page displays the card as fields you can edit (the question text field and the answer text field). Above the card it says what deck it is being added to (can’t edit). There is a save button under the card. Clicking save adds the card to the deck displayed (the deck id is passed to the API call along with the card info). Clicking save without a card id tells the API to create a new card.
-
-### Edit a Card
-On the Deck page, the user scrolls to the card they want and clicks the edit button. Clicking the edit button opens the Create Card page, but with the fields pre-populated with the current values. It also has the card id (hidden from the user). Clicking save with a card id tells the API to update a card.
-
-### Delete an Existing Card
-On the Deck page, the user scrolls to the card and clicks the delete button. Card is removed from the database. The card list is either updated or the page is reloaded. 
+### Managing Cards in a Deck
+On the Edit Deck page, users manage cards directly.
+*   **Create a Card:** Clicking the "Add new Card" button adds a new, empty card form (with question and answer input fields, and a "Save" button) to the list of cards.
+*   **Edit a Card:** Each card in the deck is displayed as a form with its question and answer in input fields. The user can modify the text and click a "Save Card" button to update the card.
+*   **Delete a Card:** Each card has a "Delete Card" button. Clicking it removes the card from the deck.
 
 ### Study a Deck
 On the dashboard, the user clicks the study deck button. A request for all of the cards in the deck is sent as an array and the response is shuffled. Opens the study deck page which shows a card with only the question field visible and the answer field hidden with JS/CSS. A ‘reveal’ button under the card makes the answer field visible. Next card and back card buttons move to other cards by swapping out the values of the question and answer fields and hiding the answer again.
