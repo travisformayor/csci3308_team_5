@@ -62,31 +62,45 @@ erDiagram
     decks ||--o{ flashcards : "contains"
 ```
 
-## 5. API Endpoints
+## 5. Application Routes
 
-| Method | Endpoint | Auth Required? | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/register` | No | Process new user registration. |
-| `POST` | `/login` | No | Process user login. |
-| `GET` | `/logout` | Yes | Process user logout. |
-| `POST`| `/decks/create`| Yes | Create a new Deck. |
-| `POST`| `/decks/edit` | Yes | Update a Deck's name. |
-| `POST`| `/decks/delete`| Yes | Delete a Deck and all of its associated Cards. |
-| `POST`| `/cards/create`| Yes | Create a new Card in a Deck. |
-| `POST`| `/cards/edit`  | Yes | Update a Card. |
-| `POST`| `/cards/delete`| Yes | Delete a Card. |
+Server routes follow the server-side rendering (SSR) pattern.
+
+| Method | Route | Auth Required? | Action | Request Data (from `req`) | Render/Response Data (to `res`) | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/` | No | Renders home page or redirects if logged in. | `session` | Redirects to `/dashboard` if logged in. Otherwise, renders `pages/home`. | Checks `req.session.user` to decide whether to render or redirect. |
+| `GET` | `/register` | No | Renders the registration page. | `N/A` | Renders `pages/register`. | Renders a static page. |
+| `POST` | `/register` | No | Processes new user registration. | `body: { email, password }` | On success, redirects to `/login`.<br>On failure, renders `pages/register` with `{ error, message }`. | Hashes the password with bcrypt, then creates a new user record in the DB. |
+| `GET` | `/login` | No | Renders the login page. | `N/A` | Renders `pages/login`. | Renders a static page. |
+| `POST` | `/login` | No | Processes user login, starts session. | `body: { email, password }` | On success, redirects to `/dashboard`.<br>On failure, renders `pages/login` with `{ error, message }`. | Finds user by email, compares hashed password, then sets `req.session.user`. |
+| `GET` | `/logout` | Yes | Clears user session and logs out. | `session` | Renders `pages/logout` with a confirmation message. | Destroys the current session to log the user out. |
+| `GET` | `/dashboard` | Yes | Renders dashboard with user's decks. | `session` | Renders `pages/dashboard` with `{ decks: [{ id, title, cardCount }] }`. | Queries DB for all decks belonging to the `req.session.user.id`. |
+| `POST` | `/decks/create` | Yes | Creates a new deck. | `session`, `body: { title }` | On success, redirects to `/decks/edit/:deck_id/card/:card_id`, where card_id is the newly created blank card. | Creates a new deck record and inserts an initial blank card associated with it. DB insert returns both the new deck id and card id for the redirect. |
+| `POST` | `/decks/delete/:deck_id` | Yes | Deletes a deck. | `session`, `params: { deck_id }` | On success, redirects to `/dashboard`.<br>On failure, renders `pages/dashboard` with `{ error, message, decks }`. | Deletes the deck record and all of its associated card records (cascade). |
+| `GET` | `/decks/edit/:deck_id` | Yes | Redirects to the editor for the newest card in a deck. | `session`, `params: { deck_id }` | Redirects to `/decks/edit/:deck_id/card/:card_id`. | Finds the newest card in the deck (e.g., `ORDER BY id DESC LIMIT 1`) to determine the redirect URL. |
+| `GET` | `/decks/edit/:deck_id/card/:card_id` | Yes | Renders the editor for a specific card. | `session`, `params: { deck_id, card_id }` | Renders `pages/edit-deck` with `{ deck, card, nextCardId, prevCardId }`. | Fetches the current card, and runs separate queries to find the next and previous card IDs for navigation. |
+| `POST` | `/decks/:deck_id/cards/add` | Yes | Adds a new, blank card to a deck. | `session`, `params: { deck_id }` | On success, redirects to the new card's editor URL (`/decks/edit/.../:card_id`).<br>On failure, redirects to the main deck editor (`/decks/edit/:deck_id`) with an error. | Inserts a new, empty card record into the DB, returning the new `card_id` for the redirect. |
+| `POST` | `/cards/save/:card_id` | Yes | Updates a card's content. | `session`, `params: { card_id }`, `body: { question, answer }` | On success, redirects to the same editor URL (`/decks/edit/.../:card_id`).<br>On failure, re-renders `pages/edit-deck` with `{ error, card }`, were card is the body data sent back to preserve the user input. | Runs an `UPDATE` query on the `flashcards` table for the given `card_id`. |
+| `POST` | `/cards/delete/:card_id` | Yes | Deletes a card. | `session`, `params: { card_id }` | On success, redirects to the main deck editor (`/decks/edit/:deck_id`).<br>On failure, redirects to the card's editor URL with an error. | Runs a `DELETE` query on the `flashcards` table for the given `card_id`. |
+| `GET` | `/decks/study/:deck_id` | Yes | Renders the study mode page. | `session`, `params: { deck_id }` | Renders `pages/study-mode` with `{ deck: { id, title }, cards: [...] }` (shuffled). | Fetches all cards, shuffles the array, then renders the page. |
 
 ## 6. Views
 
 | Page Name | Route | Auth Required? | Description |
 | :--- | :--- | :--- | :--- |
-| **Login** | `/login` | No | Login form. Default for unauthenticated users. |
+| **Login** | `/login` | No | Login form. |
 | **Register** | `/register` | No | Registration form. |
-| **Dashboard** | `/` | Yes | Dashboard. Lists user's Decks. Allows users to create a new Deck. |
-| **Deck View** | `/decks/:id` | Yes | View Cards in a Deck. Options to study, edit Deck, and manage Cards. |
-| **New Card** | `/decks/:id/cards/new` | Yes | Form to create a new Card in a Deck. |
-| **Edit Card** | `/cards/:card_id/edit` | Yes | Form to edit an existing Card. |
-| **Study Mode** | `/decks/:id/study`| Yes | Study interface for a Deck. |
+| **Dashboard** | `/dashboard` | Yes | Lists decks and allows deck creation/deletion. |
+| **Card Editor** | `/decks/edit/:deck_id/card/:card_id` | Yes | Edits one card at a time with navigation. |
+| **Study Mode** | `/decks/study/:deck_id` | Yes | Shows cards for studying. Uses some JS to manage navigating the cards array and revealing answers |
+
+### Partials
+
+| Partial Name | File Path | Description | Used In |
+| :--- | :--- | :--- | :--- |
+| **Navbar** | `partials/navbar.hbs` | Navigation bar with links to Home, Dashboard, and Logout. | Dashboard, Card Editor, Study Mode |
+| **Deck Item** | `partials/deck-item.hbs` | Reusable template for a single deck entry, including title, Study/Edit/Delete buttons. | Dashboard |
+| **Error Message** | `partials/error.hbs` | Displays error messages. | Any page that handles form errors (e.g., Login, Register, Dashboard, Card Editor) |
 
 ## 7. User Flows
 
