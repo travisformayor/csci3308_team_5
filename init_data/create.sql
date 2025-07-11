@@ -1,0 +1,22 @@
+DROP TABLE IF EXISTS flashcards;
+DROP TABLE IF EXISTS decks;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(100) NOT NULL,
+  password_hash TEXT NOT NULL
+);
+
+CREATE TABLE decks (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users (id),
+  title VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE flashcards (
+  id SERIAL PRIMARY KEY,
+  deck_id INTEGER NOT NULL REFERENCES decks (id),
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL
+);
