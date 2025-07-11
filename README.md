@@ -56,12 +56,12 @@ erDiagram
       <img src="mockup/dashboard-add-deck.png" alt="Dashboard Add Deck" style="width:100%;"/>
     </td>
     <td style="padding:10px; width: 50%;">
-      <img src="mockup/edit-deck.png" alt="Edit Deck" style="width:100%;"/>
+      <img src="mockup/edit-card.png" alt="Edit Deck" style="width:100%;"/>
     </td>
   </tr>
   <tr>
     <td style="padding:10px; width: 50%;">
-      <img src="mockup/studymode.png" alt="Study Mode" style="width:100%;"/>
+      <img src="mockup/study-mode.png" alt="Study Mode" style="width:100%;"/>
     </td>
     <td style="padding:10px; width: 50%;">
     </td>
