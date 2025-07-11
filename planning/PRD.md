@@ -105,44 +105,108 @@ Server routes follow the server-side rendering (SSR) pattern.
 ## 7. User Flows
 
 ### User Registration and Login
-The home page for unauthenticated users is a landing page with options to "Sign In" or "Register". Clicking these buttons takes the user to the respective pages. After a successful login, the user is redirected to their dashboard. All authenticated pages (Dashboard, Edit Deck, Study Mode) have a navigation bar with a link to the Home, Dashboard and a "Logout" button.
+The home page for unauthenticated users is a landing page with options to "Sign In" or "Register". Clicking these takes the user to the respective pages. After a successful login, the user is redirected to their dashboard. All authenticated pages have a navigation bar with links to Home, Dashboard, and Logout.
 
 ### Create a New Deck
-On the dashboard, the logged-in user clicks the "Add New Deck" button. This action reveals an inline form with a text input for the deck's name, a "Save" button, and a "Cancel" button. Clicking "Save" creates the new deck and redirects the user to the Edit Deck page for the newly created deck, which starts with one blank card ready for input. Clicking "Cancel" reverts the view to just show the "Add New Deck" button.
+On the dashboard, the user clicks "Add New Deck". This shows a form with a text input for the deck's name, "Save", and "Cancel". Clicking "Save" creates the deck and redirects to the Card Editor for the first blank card. Clicking "Cancel" hides the form.
 
 ### Delete a Deck
-On the dashboard, when logged in, there is a "Delete" button next to each deck. Clicking it deletes the deck and all of its cards. (Stretch goal: confirmation dialog before deck deletes.)
+On the dashboard, there is a "Delete" button next to each deck. Clicking it deletes the deck and all of its cards.
 
-### Editing a Deck
-On the dashboard, the user clicks the "Edit" button next to each deck. This takes the user to the Edit Deck page. The page displays the deck's title at the top left. It also has "Add new Card", "Save Card", and "Delete Card" buttons. Below, the "Previous" and "Next" buttons allow the user to look at all cards belonging to the deck.
-
-### Managing Cards in a Deck
-On the Edit Deck page, users manage cards directly.
-*   **Create a Card:** Clicking the "Add new Card" button adds a new, empty card form (with question and answer input fields, and a "Save" button) to the list of cards.
-*   **Edit a Card:** Each card in the deck is displayed as a form with its question and answer in input fields. The user can modify the text and click a "Save Card" button to update the card.
-*   **Delete a Card:** Each card has a "Delete Card" button. Clicking it removes the card from the deck.
+### Editing a Deck and its Cards
+This uses the Card Editor, which shows one card at a time.
+*   **Entering the Editor**: From the dashboard, clicking "Edit" takes the user to the editor for the newest card in that deck. The URL is specific to that card (e.g., `/decks/edit/123/card/45`).
+*   **Navigation**: The user clicks "Previous" or "Next" to go to the URL of the adjacent card.
+*   **Adding a Card**: The user clicks "Add new Card". This creates a blank card and redirects to its editor URL. The user can then fill in content and save.
+*   **Saving a Card**: Clicking "Save Card" sends the data to the server. On success, the page reloads at the same URL. On failure, the page reloads with an error but keeps the user's text.
+*   **Deleting a Card**: Clicking "Delete Card" removes the card and redirects to the editor for the newest remaining card.
 
 ### Study a Deck
-On the dashboard, the user clicks the study deck button. A request for all of the cards in the deck is sent as an array and the response is shuffled. Opens the study deck page which shows a card with only the question field visible and the answer field hidden with JS/CSS. A ‘reveal’ button under the card makes the answer field visible. Next card and back card buttons move to other cards by swapping out the values of the question and answer fields and hiding the answer again.
+On the dashboard, the user clicks the study button. The server shuffles the cards and renders the study page. It shows the first card with the answer hidden. Users can reveal the answer by clicking on the "covered" answer. "Next/back" buttons allow navigation through the shuffled cards.
 
 ### Logout
-Clicking the Logout button in the nav bar ends the session and redirects the user to the login screen.
+Clicking "Logout" in the nav bar ends the session and redirects to the login screen.
 
-## 8. Security & Session Management
+## 8. Design Mockups
+
+### Landing Page ([mockup/home.png](mockup/home.png))
+- **Page:** Landing page for unauthenticated users.
+- **Interactions:**
+  - "Sign In" button
+  - "Register" button
+
+### Sign In Page ([mockup/signin.png](mockup/signin.png))
+- **Page:** User login form.
+- **Interactions:**
+  - Email input field
+  - Password input field
+  - "Sign In" button
+  - "Don't have an account? Register" link
+
+### Register Page ([mockup/register.png](mockup/register.png))
+- **Page:** New user registration form.
+- **Interactions:**
+  - Email input field
+  - Password input field
+  - "Register" button
+  - "Already have an account? Sign in" link
+
+### Dashboard ([mockup/dashboard.png](mockup/dashboard.png))
+- **Page:** Main view for authenticated users, listing their decks.
+- **Interactions:**
+  - **Navbar:**
+    - "Home" button
+    - "Dashboard" button
+    - "Logout" button
+  - "Add New Deck" button
+  - For each deck:
+    - "Study" button
+    - "Edit" button
+    - "Delete" button
+
+### Dashboard - Add Deck View ([mockup/dashboard-add-deck.png](mockup/dashboard-add-deck.png))
+- **Page:** A state of the dashboard page for adding a new deck.
+- **Interactions:**
+  - Deck name input field
+  - "Save" button
+  - "Cancel" button
+
+### Edit Deck Page ([mockup/edit-card.png](mockup/edit-card.png))
+- **Page:** View for managing cards within a single deck, one card at a time.
+- **Interactions:**
+  - **Navbar:** (Same as Dashboard)
+  - Deck title display
+  - Question input field
+  - Answer input field
+  - "Add new Card" button
+  - "Save Card" button
+  - "Delete Card" button
+  - "Previous" button
+  - "Next" button
+
+### Study Mode Page (`mockup/study-mode.png`)
+- **Page:** Interface for studying a deck of flashcards.
+- **Interactions:**
+  - **Navbar:** (Same as Dashboard)
+  - Clicking the answer area reveals the card's answer
+  - "Previous" button
+  - "Next" button
+
+## 9. Security & Session Management
 
 *   **Session Management**: Use `express-session` with a secure, random secret to sign the session ID cookie.
 *   **Password Hashing**: Use `bcrypt` to hash passwords. Compare hashes on login.
 *   **SQL Injection Prevention**: Use parameterized queries with `pg-promise`.
 
-## 9. Development Process & DevOps
+## 10. Development Process & DevOps
 
 *   **Git Workflow**: Use a feature-branching workflow. Each user story or feature must be developed in a separate branch. Merge changes to `main` via pull requests, which must be reviewed by at least one other team member.
-*   **Project Management**: Track progress using a GitHub Project board with at least four columns (e.g., Backlog, In Progress, In Review, Done). Use epics to organize major features.
-*   **Local Development**: Use Docker and `docker-compose` with `web` (Node.js) and `db` (PostgreSQL) services. Initialize local DB schema with `.sql` scripts in `/docker-entrypoint-initdb.d`.
+*   **Project Management**: Track progress using a Trello board with at least four columns.
+*   **Local Development**: Use Docker and `docker-compose` with `web` (Node.js) and `db` (PostgreSQL) services. Initialize local DB schema with `.sql` scripts.
 *   **Production Deployment**: Deploy to Render with a managed PostgreSQL database and a Node.js web service.
 *   **Production Database Initialization**: Manually initialize production schema by running `.sql` scripts via `psql`.
 
-## 10. Testing
+## 11. Testing
 
 *   **Frameworks**: Mocha, Chai, and `chai-http` for server-side tests.
 *   **Execution**: Run tests from `/test` with `npm test`.
@@ -150,7 +214,7 @@ Clicking the Logout button in the nav bar ends the session and redirects the use
 *   **Authentication Testing**: Use `chai-http` agent to test authenticated routes by persisting session cookies.
 *   **User Acceptance Testing**:  Define and execute user acceptance test cases to verify user flows (e.g., sign up, login, creating/deleting Decks, adding/editing/deleting Cards, studying) work as intended from an end-user perspective. A minimum of 4 use cases must be tested.
 
-## 11. Stretch Goals
+## 12. Stretch Goals
 
 Features beyond the MVP scope.
 
@@ -161,7 +225,7 @@ Features beyond the MVP scope.
 *   Sharing Decks or Cards with other users.
 *   User profiles.
 
-## 12. Documentation & Deliverables
+## 13. Documentation & Deliverables
 
 *   **README.md**: Must contain an application description, list of contributors, technology stack, prerequisites, setup instructions, test instructions, and a link to the deployed application.
 *   **Final Project Report**: A PDF document that includes:
@@ -171,7 +235,7 @@ Features beyond the MVP scope.
     *   Results and observations from User Acceptance Testing.
 *   **Video Demo**: A video (5 minutes or less) demonstrating the final project.
 
-## 13. Success Metrics
+## 14. Success Metrics
 
 *   **Functionality:** All MVP features are implemented and working.
 *   **Deployment:** Application is deployed to Render and accessible.
