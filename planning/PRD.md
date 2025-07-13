@@ -88,6 +88,7 @@ Server routes follow the server-side rendering (SSR) pattern.
 
 | Page Name | Route | Auth Required? | Description |
 | :--- | :--- | :--- | :--- |
+| **Home** | `/` | No | Landing page for unauthenticated users with options to sign in or register. |
 | **Login** | `/login` | No | Login form. |
 | **Register** | `/register` | No | Registration form. |
 | **Dashboard** | `/dashboard` | Yes | Lists decks and allows deck creation/deletion. |
