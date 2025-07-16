@@ -7,7 +7,7 @@
           <a class="nav-link" href="/">Home</a>
         </li>
         <li class="nav-item">
-            {{#if username }}
+            {{#if req.session.user }}
                 <a class="nav-link" href="/decks">Dashboard</a>
             {{/if}}
         </li>
@@ -17,13 +17,13 @@
     <div class="navbar-collapse collapse order-3 dual-collapse2">
       <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            {{#if username }}
+            {{#if req.session.user }}
               <a class="nav-link" href="/logout">Log out</a>
             {{/if}}
           </li>
           <li class="nav-item">
               <a class="nav-link" href="#">
-              {{ username }}
+              {{ req.session.user.name }}
               </a>
           </li>
       </ul>

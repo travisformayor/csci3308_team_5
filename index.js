@@ -78,103 +78,20 @@ const user = {
 
 // Task - Add the API routes here
 
-app.get('/login', (req, res) => {
-  res.render('pages/login');
-});
 
-// Login submission
-app.post('/login', async (req, res) => {
-    const email = req.body.email;
-    const query = 'select * from users where users.email = $1 LIMIT 1';
-    const values = [email];
-
-    try {
-        let userLogin = await db.one(query, values);
-        // check if password from request matches with password in DB
-        const match = await bcrypt.compare(req.body.password, userLogin.password);
-        if (match == false){
-            res.render('pages/login', {
-                message: "Incorrect username or password.",
-            });
-        } 
-        else {
-            user.username = data.username;
-            user.user_id = data.id;
-
-            req.session.user = user;
-            req.session.save();
-
-            res.redirect('/');
-        }
-    }
-    catch (err) {
-        res.render('/login', {
-            message: "Could not find user. Check your spelling or register a new account."
-        });
-        console.log(err);
-    };
-});
-
-
-app.get('/register', (req, res) => {
-    res.render('pages/register')
-});
-
-app.post('/register', async (req, res) => {
-    //check if account w email already exists
-    const email = req.body.email;
-    const query = 'select * from users where users.email = $1 LIMIT 1';
-    const values = [email];
-    const exists = 0;
-
-    db.one(query, values)
-    .then(data => {
-      res.render('/register', {
-        message: `An account already exists with the email '${email}'. Try again with a different email.`
-      })
-      exists = 1;
-    })
-    .catch(err => {
-      console.log(err);
-      exists = 0; 
-    });
-
-    if (exists == 0) {
-        //hash the password using bcrypt library
-        const hash = await bcrypt.hash(req.body.password, 10);
-        try {
-            await db.none(
-                `INSERT INTO users (username, email, password_hash) VALUES ('${req.body.username}', '${req.body.email}', '${hash}');`
-            );
-            res.redirect('/login');
-        }
-        catch (err) {
-            console.log(err);
-            res.render('/register', {
-                message: "An error occured. Your account has not been registered.",
-            });
-        }
-    }
-});
-
-
-app.get('/', (req,res) => {
-    res.render('pages/home');
-});
-
-
-app.get('/logout', (req, res) => {
+app.get('/logout', requireAuth, (req, res) => {
   req.session.destroy(function(err) {
-    res.render('pages/logout', {
+    res.render('pages/home', {
         message: "Logged out successfully!",
     });
   });
 });
 
 
-app.get('/decks', (req, res) => {
-    const query = 'select * from decks where decks.user_id = $1';
-    const values = [user.user_id];
+app.get('/decks', requireAuth, (req, res) => {
+    const query = 'SELECT * FROM decks WHERE decks.user_id = $1';
+    const userId = req.session.user.id;
+    const values = [userId];
     db.any(query, values)
     .then(decks => {
         console.log(decks)
@@ -186,75 +103,53 @@ app.get('/decks', (req, res) => {
     .catch(err => {
         res.render('pages/decks', {
             courses: [],
-            username: user.username,
+            id: userId,
             error: true,
             message: err.message,
         });
     });
 });
 
-
-app.post('/decks/add', (req, res) => {
-    const query = 'select * from decks where decks.user_id = $1';
-    const values = [user.user_id];
+app.get('/decks/create', requireAuth, (req, res) => {
+    const query = 'SELECT * FROM decks WHERE decks.user_id = $1';
+    const userId = req.session.user.id;
+    const values = [userId];
     db.any(query, values)
     .then(decks => {
         console.log(decks)
         res.render('pages/decks', {
-            email: user.username,
+            userId: userId,
             decks,
-            new: 1,
+
         });
     })
     .catch(err => {
         res.render('pages/decks', {
             courses: [],
-            username: user.username,
+            userId: userId,
             error: true,
             message: err.message,
         });
     });
 });
 
-app.post('/decks/add/confirm', (req, res) => {
-    const addquery = 'INSERT INTO decks (name, user_id) VALUES ($1, $2)';
-    const addvalues = [req.body.newName, user.user_id];
+app.post('/decks/create', requireAuth, async(req,res)=>{
+    const {title} = req.body;
+    const userId = req.session.user.id;
+
     try{
-        db.none(addquery, addvalues)
-
-        const query = 'select * from decks where decks.user_id = $1';
-        const values = [user.user_id];
-        db.any(query, values)
-        .then(decks => {
-            console.log(decks)
-            res.render('pages/decks', {
-                email: user.username,
-                decks,
-                message: `${req.body.newName} has been added.`
-            });
-        })
-        .catch(err => {
-            res.render('pages/decks', {
-                courses: [],
-                username: user.username,
-                error: true,
-                message: err.message,
-            });
-        });
+        const result = await db.one(
+            'INSERT INTO decks (title, user_id) VALUES ($1, $2) RETURNING *',
+            [title, userId]
+        );
+        res.status(201).json({ message: "Deck created successfully", deck: result });
     }
-    catch(err) {
-        res.render('pages/decks', {
-            courses: [],
-            username: user.username,
-            error: true,
-            message: err.message,
-        });
+    catch (error) {
+        console.error('Error creating deck:', error);
+        res.status(500).json({message: "Error creating deck"});
     }
 });
 
-app.post('/decks/add/cancel', (req, res) => {
-    res.redirect('/decks');
-});
 
 
 
