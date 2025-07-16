@@ -69,12 +69,135 @@ app.use(
 // <!-- Section 4 : API Routes -->
 // *****************************************************
 
+
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user) {
+    // Default to login page.
+    return res.redirect('/login');
+  }
+  next();
+};
+
+
+
 // Task - Add the API routes here
+
+app.get('/', (req, res) => {
+  res.redirect('/login'); //this will call the /anotherRoute route in the API
+});
+
+app.get('/login', (req, res) => {
+  const message = req.session.message;
+  req.session.message = null;
+  res.render('pages/login', { message });
+});
+
+app.get('/register', (req, res) => {
+  const message = req.session.message;
+  req.session.message = null;
+  res.render('pages/register', { message });
+});
+
+
+
+app.post('/register', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Hash the password
+    const hash = await bcrypt.hash(password, 10);
+
+    // Insert email and hashed password into the 'users' table
+    await db.none(
+      'INSERT INTO users (email, password_hash) VALUES ($1, $2)',
+      [email, hash]
+    );
+
+    // Redirect to login page on success
+    req.session.message = 'Successfully registered! You can now log in.';
+    res.redirect('/login');
+  } catch (error) {
+    console.error('Registration error:', error);
+
+     if (error.code === '23505') {
+      // Unique violation: email already exists
+      req.session.message = 'An account with this email already exists.';
+    } else {
+      req.session.message = 'Registration failed. Please try again.';
+    }
+    
+
+    // Redirect to register page on failure
+    res.redirect('/register');
+  }
+});
+
+
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await db.oneOrNone(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (!user) {
+      req.session.message = 'Account does not exist, please register.';
+      return res.redirect('/register');
+    }
+
+    const match = await bcrypt.compare(password, user.password_hash);
+
+    if (!match) {
+      return res.render('pages/login', {
+        message: 'Incorrect email or password.',
+      });
+    }
+
+    // Save user and API key in session
+    req.session.user = user;
+    req.session.apiKey = process.env.API_KEY;
+
+    req.session.save(() => {
+      res.redirect('/dashboard');
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.redirect('/dashboard'); // fallback if session destruction fails
+    }
+
+    // Render logout page with a success message
+    res.render('pages/logout', {
+      message: 'Logged out successfully.',
+    });
+  });
+});
+
+
+
+
+
+
+
 
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting server and keep connection open for requests
-app.listen(3000);
-console.log('Server is listening on port 3000');
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Server is listening on port 3000');
+});
