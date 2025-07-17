@@ -95,11 +95,17 @@ app.post('/decks/create', requireAuth, async(req,res)=>{
     const userId = req.session.user.id;
 
     try{
-        const result = await db.one(
+        const deck = await db.one(
             'INSERT INTO decks (title, user_id) VALUES ($1, $2) RETURNING *',
             [title, userId]
         );
-        res.status(201).json({ message: "Deck created successfully", deck: result });
+
+        const card = await db.one(
+            'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING *',
+            [deck.id, '', '']
+        )
+
+        res.redirect(`/decks/edit/${deck.id}/card/${card.id}`);
     }
     catch (error) {
         console.error('Error creating deck:', error);
@@ -107,28 +113,8 @@ app.post('/decks/create', requireAuth, async(req,res)=>{
     }
 });
 
-app.post('/decks/edit', requireAuth, async (req, res) => {
-    const { deckId, title } = req.body; //Destructure can be used here because they are both part of body
-    const userId = req.session.user.id;
-
-    try {
-        const result = await db.oneOrNone(
-            'UPDATE decks SET title = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
-            [title, deckId, userId]
-        );
-        if (!result) {
-            return res.status(404).json({ message: "Deck not found or unauthorized" });
-        }
-        res.status(200).json({ message: "Deck updated successfully", deck: result});
-    }
-    catch (error) {
-        console.error('Error updating deck:', error);
-        res.status(500).json({message: "Error updating deck"});
-    }
-});
-
-app.post('/decks/delete', requireAuth, async (req,res) => {
-    const deckId = req.body.deckId;
+app.post('/decks/delete/:deck_id', requireAuth, async (req,res) => {
+    const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
     try{
@@ -139,12 +125,69 @@ app.post('/decks/delete', requireAuth, async (req,res) => {
         if (result.rowCount === 0) {
             return res.status(404).json({message: "Deck not found or unauthorized"});
         }
-        res.status(200).json({message: "Deck deleted successfully"});
+        res.redirect(`/dashboard`);
     }
     catch (error) {
         console.error('Error deleting deck:', error);
         res.status(500).json({message: "Error deleting deck"});
     }
+});
+
+
+app.get('/decks/edit/:deck_id', requireAuth, async (req, res) => {
+    const deckId = req.params.deck_id;
+    const userId = req.session.user.id;
+
+    try {
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId, userId]
+        );
+        if (!deck) {
+            return res.status(404).json({ message: "Deck not found or authorized" });
+        }
+        const card = await db.oneOrNone(
+            'SELECT * FROM flashcards WHERE deck_id = $1 ORDER BY id DESC LIMIT 1',
+            [deckId]
+        );
+        if (!card) {
+            return res.status(404).json({message: "No cards found for this deck"});
+        }
+        res.redirect(`/decks/edit/${deckId}/card/${card.id}`);
+    }
+    catch (error) {
+        console.error('Error fetching deck:', error);
+        res.status(500).json({message: "Error fetching deck"});
+    }
+});
+
+app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req,res) => {
+    const deckId = req.params.deck_id;
+    const cardId = req.params.card_id;
+    const userId = req.session.user.id;
+
+    try {
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId, userId]
+        )
+        if (!deck) {
+            return res.status(404).json({ message: "Deck not found or authorized" });
+        }
+        const card = await db.oneOrNone(
+            'SELECT * FROM flashcards WHERE id = $1 AND deck_id = $2',
+            [cardId, deckId]
+        );
+        if (!card) {
+            return res.status(404).json({ message: "No cards found for this deck"});
+        }
+        res.render('pages/edit-deck',{deck,card,nextCardId, prevCardId});
+    }
+    catch (error) {
+        console.error('Error fetching card/deck:', error);
+        res.status(404).json({message: 'Error fetching card/deck'});
+    }
+    
 });
 
 // POST Card Endpoints
