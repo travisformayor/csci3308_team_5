@@ -1,0 +1,96 @@
+<style>
+    th {
+        padding:5px 5px;
+        border-bottom: 1px solid #ddd;
+    }
+    td {
+        padding:10px 5px;
+        border-bottom: 1px solid #ddd;
+    }
+    #decktab {
+        margin: 5px 5%;
+    }
+    .add {
+        color: white;  
+        background-color: rgb(51,51,51);
+        padding: 4px 10px; 
+        border-radius: 5px; 
+        border-width: 2px;
+        border-color: rgb(51,51,51);
+        border-style: solid;
+    }
+    .add:hover {
+        background-color: rgb(69,69,69);
+        border-style:outset;
+    }
+    .button {
+        color: rgb(51,51,51);  
+        background-color: white;
+        padding: 4px 10px; 
+        border-radius: 5px; 
+        border-width: 2px;
+        border-color: rgb(51,51,51);
+        border-style: solid;
+    }
+    .button:hover {
+        background-color: #f4f4f4;
+        border-style:outset;
+    }
+</style>
+
+{{> message }}
+<table id="decktab">
+    {{#unless newDeck}}
+    <tr>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+        <th>
+            <form action="/decks/create" method="GET">
+                <input type="submit" value="Add New Deck" class="add">
+            </form>
+        </th>
+    </tr>
+    {{else}}
+    <tr>
+        <form action="/decks/create" method="POST">
+        <th>
+            <input type="text" id="title" name="title" placeholder="Deck Name">
+        </th>
+        <th>&nbsp;</th>
+        <th>
+            <input type="submit" value="Save" class="add">
+        </th>
+        </form>
+
+        <th>
+            <form action="/decks" method="GET">
+                <input type="submit" value="Cancel" class="button">
+            </form>
+        </th>
+    </tr>
+    {{/unless}}
+    {{#each decks}}
+    <tr>
+        <td>{{title}}</td>
+        <td>
+            <form action="/decks/edit" method="POST">
+                <input type="hidden" name="deck_id" value={{id}}>
+                <input type="submit" value="Edit" class="button">
+            </form>
+        </td>
+        <td>
+            <form action="/decks/study" method="POST">
+                <input type="hidden" name="deck_id" value={{id}}>
+                <input type="submit" value="Study" class="button">
+            </form>
+        </td>
+        <td>
+            <form action="/decks/delete" method="POST">
+                <input type="hidden" name="deck_id" value={{id}}>
+                <input type="submit" value="Delete" class="button">
+            </form>
+        </td>
+    </tr>
+    {{/each}}
+</table>

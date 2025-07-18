@@ -1,0 +1,41 @@
+<style>
+    th {
+        padding:5px 5px;
+        border-bottom: 1px solid #ddd;
+    }
+    #hometab {
+        margin: 5px 5%;
+    }
+    h1 {
+        padding: 5px 5%;
+    }
+</style>
+
+{{> message }}
+<h1>Welcome!</h1>
+<table id="hometab">
+    <tr>
+        <th>FIRST NAME</th>
+        <th>{{first_name}}</th>
+    </tr>
+    <tr>
+        <th>LAST NAME</th>
+        <th>{{last_name}}</th>
+    </tr>
+    <tr>
+        <th>EMAIL NAME</th>
+        <th>{{email}}</th>
+    </tr>
+    <tr>
+        <th>YEAR</th>
+        <th>{{year}}</th>
+    </tr>
+    <tr>
+        <th>MAJOR</th>
+        <th>{{major}}</th>
+    </tr>
+    <tr>
+        <th>DEGREE</th>
+        <th>{{degree}}</th>
+    </tr>
+</table>
