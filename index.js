@@ -89,7 +89,6 @@ function requireAuth(req,res,next){
     }
 }
 
-// POST Deck Endpoints
 app.post('/decks/create', requireAuth, async(req,res)=>{
     const {title} = req.body;
     const userId = req.session.user.id;
@@ -181,75 +180,157 @@ app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req,res) => {
         if (!card) {
             return res.status(404).json({ message: "No cards found for this deck"});
         }
-        res.render('pages/edit-deck',{deck,card,nextCardId, prevCardId});
+
+        const next = await db.oneOrNone(
+            'SELECT id FROM flashcards WHERE deck_id = $1 AND id > $2 ORDER BY ID ASC LIMIT 1',
+            [deckId,cardId]
+        );
+
+        const prev = await db.oneOrNone(
+            'SELECT id FROM flashcards WHERE deck_id = $1 AND id < $2 ORDER BY ID DESC LIMIT 1',
+            [deckId,cardId]
+        );
+        res.render('pages/edit-deck',{deck,card,
+            nextCardId: next ? next.id : null, 
+            prevCardId: prev ? prev.id : null
+        });
     }
     catch (error) {
         console.error('Error fetching card/deck:', error);
         res.status(404).json({message: 'Error fetching card/deck'});
     }
-    
 });
 
-// POST Card Endpoints
-
-
-app.post('/cards/create', requireAuth, async (req, res) => {
-    const {deckId, question, answer} = req.body;
+app.post('/decks/:deck_id/cards/add', requireAuth, async (req,res) => {
+    const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
     try{
-        const result = await db.one(
-            'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING *',
-            [deckId, question, answer]
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId,userId]
         );
-        res.status(201).json({ message: "Card created successfully", card: result });
+        if (!deck){
+            return res.status(404).json({message: 'Deck not found or authorized'});
+        }
+        const newCard = await db.one(
+            'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING id',
+            [deckId,'','']
+        );
+        res.redirect(`/decks/edit/${deckId}/card/${newCard.id}`);
     }
-    catch(error){
-        console.error('Error creating card:', error);
-        res.status(500).json({message: 'Error creating card'})
+
+    catch (error){
+        console.error('Error adding card to deck:', error);
+        res.redirect(`/decks/edit/${deckId}`);
     }
 });
 
-app.post('/cards/edit', requireAuth, async (req, res) => {
-    const {question, answer, cardId} = req.body;
+
+app.post('/cards/save/:card_id', requireAuth, async (req, res) => {
+    const cardId = req.params.card_id;
+    const {question, answer} = req.body;
+    const userId = req.session.user.id;
+
+    try{
+        const card = await db.oneOrNone(
+            'SELECT flashcards.*, decks.user_id FROM flashcards JOIN decks ON flashcards.deck_id = decks.id WHERE flashcards.id = $1 AND decks.user_id = $2',
+            [cardId, userId]
+        );
+        if(!card){
+            return res.status(404).json({message: 'Card not found or authorized'})
+        }
+
+        await db.none(
+            'UPDATE flashcards SET question = $1, answer = $2 WHERE id = $3',
+            [question,answer,cardId]
+        )
+
+        const deckId = card.deck_id;
+        res.redirect(`/decks/edit/${deckId}/card/${cardId}`);
+    }
+    catch(error){
+        console.error('Error saving card:', error);
+        res.render('pages/edit-deck',{
+            error: 'Error saving card. Please try again.',
+            card: {
+                id: cardId,
+                question,
+                answer,
+                deck_id: card?.deck_id || null
+            },
+            deck: {id: card?.deck_id || null, title: ''},
+            nextCardId: null,
+            prevCardId: null
+        });
+    }
+});
+
+app.post('/cards/delete/:card_id', requireAuth, async (req, res) => {
+    const cardId = req.params.card_id
     const userId = req.session.user.id;
 
     try {
-        const result = await db.oneOrNone(
-            'UPDATE flashcards SET question = $1, answer = $2 WHERE id = $3 AND deck_id IN (SELECT id FROM decks WHERE user_id = $4) RETURNING *',
-            [question, answer, cardId, userId]
+        const card = await db.oneOrNone(
+            'SELECT * FROM flashcards WHERE id = $1', 
+            [cardId]
         );
-        if (!result) {
-            return res.status(404).json({ message: "Card not found or unauthorized" });
+        if(!card){
+            return res.status(404).json({message: "Card not found"});
         }
-        res.status(200).json({ message: "Card updated successfully", card: result });
+
+        const deckId = card.deck_id;
+
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId, userId]
+        );
+        if(!deck){
+            return res.status(404).json({message: "Deck not found"});
+        }
+
+        await db.none(
+            'DELETE FROM flashcards WHERE id = $1',
+            [cardId]
+        );
+
+        res.redirect(`/decks/edit/${deckId}`);
     }
+    catch (error) {
+        console.error('Error deleting card:', error);
+        res.redirect(`/decks/edit/unknown/card/${cardId}`);
+    }
+});
+
+
+/*
+app.GET('/decks/study/:deck_id', requireAuth, async (req, res) => {
+    const deckId = req.params.deck_id;
+    const userId = req.session.user.id;
+
+    try {
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId, userId]
+        )
+        if (!deck) {
+            return res.status(404).json({ message: "Deck not found or authorized" });
+        }
+        const card = await db.oneOrNone(
+            'SELECT * FROM flashcards WHERE id = $1 AND deck_id = $2',
+            [cardId, deckId]
+        );
+        if (!card) {
+            return res.status(404).json({ message: "No cards found for this deck"});
+        }
+    }
+
     catch (error) {
         console.error('Error updating card:', error);
         res.status(500).json({message: "Error updating card"});
     }
 });
-
-app.post('/cards/delete', requireAuth, async (req, res) => {
-    const cardId = req.body.cardId;
-    const userId = req.session.user.id;
-
-    try {
-        const result = await db.result(
-            'DELETE FROM flashcards WHERE id = $1 AND deck_id IN (SELECT id FROM decks WHERE user_id = $2)',
-            [cardId, userId]
-        )
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: "Card not found or unauthorized" });
-        }
-        res.status(200).json({ message: "Card deleted successfully" });
-    }
-    catch (error) {
-        console.error('Error deleting card:', error);
-        res.status(500).json({message: "Error deleting card"});
-    }
-});
-
+*/
 
 
 // *****************************************************
