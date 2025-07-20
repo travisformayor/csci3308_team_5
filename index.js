@@ -86,15 +86,12 @@ if (process.env.NODE_ENV === 'test') {
  * Section 4 : API Routes
  *****************************************************/
 // Auth Middleware
-function requireAuth(req, res, next) {
-    if (req.session && req.session.user) {
-        next(); // Proceed to route handler once user is authenticated
+const auth = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
     }
-    else {
-        // Redirect to login if user is not authenticated
-        return res.status(401).json({ message: "Unauthorized User, Please log in." });
-    }
-}
+    next();
+};
 
 // ==== User Login Endpoints ==== //
 app.get('/', (_req, res) => res.redirect('/login'));
@@ -165,7 +162,7 @@ app.get('/logout', (req, res) => {
 });
 
 // ==== Card and Deck Endpoints ==== //
-app.post('/decks/create', requireAuth, async (req, res) => {
+app.post('/decks/create', auth, async (req, res) => {
     const { title } = req.body;
     const userId = req.session.user.id;
 
@@ -188,7 +185,7 @@ app.post('/decks/create', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/decks/delete/:deck_id', requireAuth, async (req, res) => {
+app.post('/decks/delete/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -209,7 +206,7 @@ app.post('/decks/delete/:deck_id', requireAuth, async (req, res) => {
 });
 
 
-app.get('/decks/edit/:deck_id', requireAuth, async (req, res) => {
+app.get('/decks/edit/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -236,7 +233,7 @@ app.get('/decks/edit/:deck_id', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req, res) => {
+app.get('/decks/edit/:deck_id/card/:card_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const cardId = req.params.card_id;
     const userId = req.session.user.id;
@@ -278,7 +275,7 @@ app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/decks/:deck_id/cards/add', requireAuth, async (req, res) => {
+app.post('/decks/:deck_id/cards/add', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -303,7 +300,7 @@ app.post('/decks/:deck_id/cards/add', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/cards/save/:card_id', requireAuth, async (req, res) => {
+app.post('/cards/save/:card_id', auth, async (req, res) => {
     const cardId = req.params.card_id;
     const { question, answer } = req.body;
     const userId = req.session.user.id;
@@ -342,7 +339,7 @@ app.post('/cards/save/:card_id', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/cards/delete/:card_id', requireAuth, async (req, res) => {
+app.post('/cards/delete/:card_id', auth, async (req, res) => {
     const cardId = req.params.card_id;
     const userId = req.session.user.id;
 
@@ -379,7 +376,7 @@ app.post('/cards/delete/:card_id', requireAuth, async (req, res) => {
 });
 
 // ==== Study Mode Endpoint ==== //
-app.get('/decks/study/:deck_id', requireAuth, async (req, res) => {
+app.get('/decks/study/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
