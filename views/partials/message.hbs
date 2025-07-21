@@ -1,5 +1,5 @@
 {{#if message}}
-  <div class="alert alert-{{#if error}}danger{{else}}success{{/if}}" role="alert">
-    {{ message }}
-  </div>
+<div class="message message-{{#if error}}error{{else}}success{{/if}}" role="alert">
+  {{ message }}
+</div>
 {{/if}}
