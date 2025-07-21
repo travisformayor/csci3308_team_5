@@ -1,0 +1,50 @@
+{{> message }}
+<div class="dashboard">
+    {{#unless newDeck}}
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <form action="/dashboard" method="GET">
+            <input type="hidden" name="newDeck" value="true">
+            <button type="submit" class="btn btn-primary">Add New Deck</button>
+        </form>
+    </div>
+    {{else}}
+    <div class="card">
+        <form action="/decks/create" method="POST">
+            <div class="form-group">
+                <label for="title" class="form-label">Deck Title</label>
+                <input type="text" id="title" name="title" class="form-input" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    {{/unless}}
+
+    {{#if decks}}
+    <div class="deck-list">
+        {{#each decks}}
+        <div class="deck-item">
+            <span>{{title}} ({{cardCount}} cards)</span>
+            <div class="deck-actions">
+                <form action="/decks/edit/{{id}}" method="GET">
+                    <button type="submit" class="btn btn-secondary">Edit</button>
+                </form>
+                <form action="/decks/study/{{id}}" method="GET">
+                    <button type="submit" class="btn btn-primary">Study</button>
+                </form>
+                <form action="/decks/delete/{{id}}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{else}}
+    <div class="text-center">
+        <p>No decks yet. Create your first deck to get started!</p>
+    </div>
+    {{/if}}
+</div>

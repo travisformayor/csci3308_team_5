@@ -24,6 +24,7 @@ const hbs = handlebars.create({
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -35,7 +36,13 @@ app.use(
     })
 );
 
-// Test environment patches - simplify app behavior for testing
+// Session data available for navbar
+app.use((req, res, next) => {
+    res.locals.req = req;
+    next();
+});
+
+// Test environment
 if (process.env.NODE_ENV === 'test') {
     // Make session.save synchronous for tests
     app.use((req, res, next) => {
@@ -86,18 +93,23 @@ if (process.env.NODE_ENV === 'test') {
  * Section 4 : API Routes
  *****************************************************/
 // Auth Middleware
-function requireAuth(req, res, next) {
-    if (req.session && req.session.user) {
-        next(); // Proceed to route handler once user is authenticated
+const auth = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
     }
-    else {
-        // Redirect to login if user is not authenticated
-        return res.status(401).json({ message: "Unauthorized User, Please log in." });
-    }
-}
+    next();
+};
 
 // ==== User Login Endpoints ==== //
-app.get('/', (_req, res) => res.redirect('/login'));
+app.get('/', (req, res) => {
+    if (req.session && req.session.user) {
+        // User is logged in, redirect to dashboard
+        res.redirect('/dashboard');
+    } else {
+        // User is not logged in, render home page
+        res.render('pages/home');
+    }
+});
 
 app.get('/login', (req, res) => {
     const msg = req.session.message;
@@ -164,8 +176,39 @@ app.get('/logout', (req, res) => {
     });
 });
 
+app.get('/dashboard', auth, async (req, res) => {
+    try {
+        const userId = req.session.user.id;
+
+        // Query all the users decks
+        const decks = await db.any(
+            'SELECT d.id, d.title, COUNT(f.id) as card_count FROM decks d LEFT JOIN flashcards f ON d.id = f.deck_id WHERE d.user_id = $1 GROUP BY d.id, d.title ORDER BY d.id DESC',
+            [userId]
+        );
+
+        // Format info for dashboard
+        const deckInfo = decks.map(deck => ({
+            id: deck.id,
+            title: deck.title,
+            cardCount: parseInt(deck.card_count)
+        }));
+
+        res.render('pages/dashboard', {
+            decks: deckInfo,
+            newDeck: req.query.newDeck === 'true'
+        });
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        res.render('pages/dashboard', {
+            decks: [],
+            error: 'Error loading decks. Please try again.',
+            newDeck: false
+        });
+    }
+});
+
 // ==== Card and Deck Endpoints ==== //
-app.post('/decks/create', requireAuth, async (req, res) => {
+app.post('/decks/create', auth, async (req, res) => {
     const { title } = req.body;
     const userId = req.session.user.id;
 
@@ -188,7 +231,7 @@ app.post('/decks/create', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/decks/delete/:deck_id', requireAuth, async (req, res) => {
+app.post('/decks/delete/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -209,7 +252,7 @@ app.post('/decks/delete/:deck_id', requireAuth, async (req, res) => {
 });
 
 
-app.get('/decks/edit/:deck_id', requireAuth, async (req, res) => {
+app.get('/decks/edit/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -236,7 +279,7 @@ app.get('/decks/edit/:deck_id', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req, res) => {
+app.get('/decks/edit/:deck_id/card/:card_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const cardId = req.params.card_id;
     const userId = req.session.user.id;
@@ -278,7 +321,7 @@ app.get('/decks/edit/:deck_id/card/:card_id', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/decks/:deck_id/cards/add', requireAuth, async (req, res) => {
+app.post('/decks/:deck_id/cards/add', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
@@ -303,7 +346,7 @@ app.post('/decks/:deck_id/cards/add', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/cards/save/:card_id', requireAuth, async (req, res) => {
+app.post('/cards/save/:card_id', auth, async (req, res) => {
     const cardId = req.params.card_id;
     const { question, answer } = req.body;
     const userId = req.session.user.id;
@@ -342,7 +385,7 @@ app.post('/cards/save/:card_id', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/cards/delete/:card_id', requireAuth, async (req, res) => {
+app.post('/cards/delete/:card_id', auth, async (req, res) => {
     const cardId = req.params.card_id;
     const userId = req.session.user.id;
 
@@ -379,7 +422,7 @@ app.post('/cards/delete/:card_id', requireAuth, async (req, res) => {
 });
 
 // ==== Study Mode Endpoint ==== //
-app.get('/decks/study/:deck_id', requireAuth, async (req, res) => {
+app.get('/decks/study/:deck_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const userId = req.session.user.id;
 
