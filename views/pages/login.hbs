@@ -1,32 +1,22 @@
-<style>
-    .submit {
-        color: white; 
-        background-color: rgb(34, 111, 255); 
-        padding: 8px 10px; 
-        border-radius: 5px; 
-        border: none;"
-    }
-    h1 {
-        padding: 1% 10%;
-        text-align: center;
-    }
-    #form {
-        margin: 0 auto;
-    }
-    .nav-link {
-        color:blue
-    }
-</style>
-
 {{> message}}
-<h1>Login</h1>
-<div id="form">
-    <form action="/login" method="POST" class="login">
-        <label for="email"><b>Email</b></label><br>
-        <input type="text" id="email" name="email"><br>
-        <label for="pw"><b>Password</b></label><br>
-        <input type="password" id="password" name="password"><br> <br>
-        <input type="submit" value="Login" class="submit"><br>
-    </form>
-    <p><a class="nav-link" href="/register">Don't have an account? Register</a></p>
+<div class="auth-page">
+    <div class="auth-card">
+        <h1>Please sign in</h1>
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </div>
+        </form>
+        <p class="text-center">
+            <a href="/register" class="auth-link">Don't have an account? Register</a>
+        </p>
+    </div>
 </div>
