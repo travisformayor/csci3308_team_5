@@ -263,12 +263,17 @@ p {
     list-style: none;
     margin: 0;
     padding: 0;
-    gap: 20px;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .navbar-nav li {
     display: inline-block;
+}
+
+.navbar-nav li:nth-child(2) {
+    margin: 0 auto;
 }
 
 .nav-link {
@@ -288,13 +293,10 @@ p {
 .footer {
     text-align: center;
     color: #6c757d;
-    /* Muted grey */
     width: 100%;
     margin-top: auto;
-    position: fixed;
-    bottom: 0;
-    padding: 10px;
-    background-color: white;
+    padding: 20px;
+    background-color: #f8f9fa;
 }
 
 /* ========================================
