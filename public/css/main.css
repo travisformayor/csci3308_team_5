@@ -1,3 +1,17 @@
+/* ========================================
+   Variables (Colors, Sizes, etc.)
+   ======================================== */
+:root {
+    --primary: #226fff;
+    --dark-grey: #333333;
+    --light-grey: #f4f4f4;
+    --border-color: #ddd;
+    --content-width: 800px;
+}
+
+/* ========================================
+   Basics
+   ======================================== */
 * {
     box-sizing: border-box;
 }
@@ -15,16 +29,6 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-/* ========================================
-   Colors and Fonts
-   ======================================== */
-:root {
-    --primary: #226fff;
-    --dark-grey: #333333;
-    --light-grey: #f4f4f4;
-    --border-color: #ddd;
 }
 
 h1 {
@@ -64,9 +68,10 @@ p {
     background-color: var(--light-grey);
     color: var(--dark-grey);
     border: 1px solid var(--border-color);
+    padding: 7px 15px;
 }
 
-.btn-danger {
+.btn-delete {
     background-color: #dc3545;
     color: white;
 }
@@ -79,7 +84,7 @@ p {
 }
 
 .container {
-    max-width: 800px;
+    max-width: var(--content-width);
     margin: 0 auto;
     padding: 20px;
 }
@@ -194,7 +199,11 @@ p {
    Dashboard
    ======================================== */
 .dashboard {
+    max-width: var(--content-width);
+    margin: 0 auto;
     padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .deck-list {
@@ -212,14 +221,26 @@ p {
     align-items: center;
 }
 
+.deck-item span {
+    flex-grow: 1;
+    text-align: left;
+}
+
 .deck-actions {
     display: flex;
     gap: 10px;
+    flex-shrink: 0;
+}
+
+.deck-actions form {
+    margin: 0;
 }
 
 .dashboard-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .form-actions {
