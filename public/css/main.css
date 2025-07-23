@@ -1,3 +1,19 @@
+/* ========================================
+   Variables (Colors, Sizes, etc.)
+   ======================================== */
+:root {
+    --primary: #226fff;
+    --dark-grey: #333333;
+    --light-grey: #f4f4f4;
+    --border-color: #ddd;
+    --card-width: 450px;
+    --card-height: 250px;
+    --content-width: 800px;
+}
+
+/* ========================================
+   Basics
+   ======================================== */
 * {
     box-sizing: border-box;
 }
@@ -15,16 +31,6 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-/* ========================================
-   Colors and Fonts
-   ======================================== */
-:root {
-    --primary: #226fff;
-    --dark-grey: #333333;
-    --light-grey: #f4f4f4;
-    --border-color: #ddd;
 }
 
 h1 {
@@ -64,9 +70,10 @@ p {
     background-color: var(--light-grey);
     color: var(--dark-grey);
     border: 1px solid var(--border-color);
+    padding: 7px 15px;
 }
 
-.btn-danger {
+.btn-delete {
     background-color: #dc3545;
     color: white;
 }
@@ -79,7 +86,7 @@ p {
 }
 
 .container {
-    max-width: 800px;
+    max-width: var(--content-width);
     margin: 0 auto;
     padding: 20px;
 }
@@ -194,7 +201,11 @@ p {
    Dashboard
    ======================================== */
 .dashboard {
+    max-width: var(--content-width);
+    margin: 0 auto;
     padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .deck-list {
@@ -212,14 +223,26 @@ p {
     align-items: center;
 }
 
+.deck-item span {
+    flex-grow: 1;
+    text-align: left;
+}
+
 .deck-actions {
     display: flex;
     gap: 10px;
+    flex-shrink: 0;
+}
+
+.deck-actions form {
+    margin: 0;
 }
 
 .dashboard-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .form-actions {
@@ -242,12 +265,17 @@ p {
     list-style: none;
     margin: 0;
     padding: 0;
-    gap: 20px;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .navbar-nav li {
     display: inline-block;
+}
+
+.navbar-nav li:nth-child(2) {
+    margin: 0 auto;
 }
 
 .nav-link {
@@ -267,13 +295,107 @@ p {
 .footer {
     text-align: center;
     color: #6c757d;
-    /* Muted grey */
     width: 100%;
     margin-top: auto;
-    position: fixed;
-    bottom: 0;
-    padding: 10px;
-    background-color: white;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+/* ========================================
+   Study Mode
+   ======================================== */
+.study-container {
+    margin: 10px auto;
+    text-align: center;
+}
+
+.study-container h1 {
+    margin-bottom: 15px;
+    margin-top: 10px;
+    font-size: 24px;
+}
+
+.study-content {
+    width: var(--card-width);
+    margin: 0 auto;
+}
+
+.flashcard {
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 40px;
+    margin-bottom: 15px;
+    height: var(--card-height);
+    width: var(--card-width);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+.flashcard p {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.question-card {
+    background-color: #fff;
+}
+
+.answer-card {
+    background-color: #ccc;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.answer-card:not(.answer-hidden) {
+    background-color: #fff;
+}
+
+#answer-container.answer-hidden #answer-display {
+    display: none;
+}
+
+#answer-container:not(.answer-hidden) .click-prompt {
+    display: none;
+}
+
+.button-row {
+    width: var(--card-width);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.button-row .btn {
+    padding: 10px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-row .btn:first-child {
+    background-color: #666;
+    color: white;
+}
+
+.button-row .btn:last-child {
+    background-color: #333;
+    color: white;
+}
+
+.button-row .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ========================================
@@ -292,5 +414,9 @@ p {
     .deck-actions {
         width: 100%;
         justify-content: center;
+    }
+
+    .study-container {
+        --card-width: 90vw;
     }
 }

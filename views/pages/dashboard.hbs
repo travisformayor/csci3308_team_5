@@ -2,7 +2,7 @@
 <div class="dashboard">
     {{#unless newDeck}}
     <div class="dashboard-header">
-        <h1>Dashboard</h1>
+        <h1>Deck List</h1>
         <form action="/dashboard" method="GET">
             <input type="hidden" name="newDeck" value="true">
             <button type="submit" class="btn btn-primary">Add New Deck</button>
@@ -36,7 +36,7 @@
                     <button type="submit" class="btn btn-primary">Study</button>
                 </form>
                 <form action="/decks/delete/{{id}}" method="POST">
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-delete">Delete</button>
                 </form>
             </div>
         </div>
