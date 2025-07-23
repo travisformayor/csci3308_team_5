@@ -18,6 +18,12 @@ const hbs = handlebars.create({
     extname: 'hbs',
     layoutsDir: __dirname + '/views/layouts',
     partialsDir: __dirname + '/views/partials',
+    // helper for embedding json data in the study mode view
+    helpers: {
+        json: function (context) {
+            return JSON.stringify(context);
+        }
+    }
 });
 
 // Register `hbs` as our view engine using its bound `engine()` function.
@@ -431,21 +437,31 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
             'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
             [deckId, userId]
         );
+
         if (!deck) {
-            return res.status(404).json({ message: "Deck not found or authorized" });
+            return res.status(404).json({ message: "Deck not found or not authorized to view" });
         }
-        const card = await db.oneOrNone(
-            'SELECT * FROM flashcards WHERE id = $1 AND deck_id = $2',
-            [cardId, deckId]
+
+        const cards = await db.any(
+            'SELECT * FROM flashcards WHERE deck_id = $1',
+            [deckId]
         );
-        if (!card) {
+
+        if (cards.length === 0) {
             return res.status(404).json({ message: "No cards found for this deck" });
         }
-    }
 
+        // Shuffle the cards
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+
+        res.render('pages/study-mode', { deck, cards });
+    }
     catch (error) {
-        console.error('Error updating card:', error);
-        res.status(500).json({ message: "Error updating card" });
+        console.error('Error loading study mode:', error);
+        res.status(500).json({ message: "Error loading study mode." });
     }
 });
 

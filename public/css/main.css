@@ -6,6 +6,8 @@
     --dark-grey: #333333;
     --light-grey: #f4f4f4;
     --border-color: #ddd;
+    --card-width: 450px;
+    --card-height: 250px;
     --content-width: 800px;
 }
 
@@ -300,6 +302,103 @@ p {
 }
 
 /* ========================================
+   Study Mode
+   ======================================== */
+.study-container {
+    margin: 10px auto;
+    text-align: center;
+}
+
+.study-container h1 {
+    margin-bottom: 15px;
+    margin-top: 10px;
+    font-size: 24px;
+}
+
+.study-content {
+    width: var(--card-width);
+    margin: 0 auto;
+}
+
+.flashcard {
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 40px;
+    margin-bottom: 15px;
+    height: var(--card-height);
+    width: var(--card-width);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+.flashcard p {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.question-card {
+    background-color: #fff;
+}
+
+.answer-card {
+    background-color: #ccc;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.answer-card:not(.answer-hidden) {
+    background-color: #fff;
+}
+
+#answer-container.answer-hidden #answer-display {
+    display: none;
+}
+
+#answer-container:not(.answer-hidden) .click-prompt {
+    display: none;
+}
+
+.button-row {
+    width: var(--card-width);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.button-row .btn {
+    padding: 10px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button-row .btn:first-child {
+    background-color: #666;
+    color: white;
+}
+
+.button-row .btn:last-child {
+    background-color: #333;
+    color: white;
+}
+
+.button-row .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
    Responsive
    ======================================== */
 @media (max-width: 600px) {
@@ -315,5 +414,9 @@ p {
     .deck-actions {
         width: 100%;
         justify-content: center;
+    }
+
+    .study-container {
+        --card-width: 90vw;
     }
 }

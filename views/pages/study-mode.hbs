@@ -1,0 +1,26 @@
+<div class="study-container">
+    <h1>Study Mode: {{deck.title}}</h1>
+
+    <div class="study-content">
+        <div class="flashcard question-card">
+            <p id="question-display"></p>
+        </div>
+
+        <div id="answer-container" class="flashcard answer-card answer-hidden">
+            <p id="answer-display"></p>
+            <p class="click-prompt">Click to show answer</p>
+        </div>
+
+        <div class="button-row">
+            <button id="prev-card" class="btn">Previous</button>
+            <button id="next-card" class="btn">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Embed cards data into the page
+    const cards = {{{ json cards }}};
+</script>
+
+<script src="/js/study-mode.js"></script>
