@@ -236,7 +236,11 @@ app.post('/decks/delete/:deck_id', auth, async (req, res) => {
     const userId = req.session.user.id;
 
     try {
-        const result = await db.none(
+        const cards = await db.none(
+            'DELETE FROM flashcards WHERE deck_id = $1',
+            [deckId]
+        );
+        const result = await db.result(
             'DELETE FROM decks WHERE id = $1 AND user_id = $2',
             [deckId, userId]
         );
