@@ -247,7 +247,7 @@ app.post('/decks/delete/:deck_id', auth, async (req, res) => {
     }
     catch (error) {
         console.error('Error deleting deck:', error);
-        res.status(500).json({ message: "Error deleting deck" });
+        res.status(500).json({ message: "Error deleting deck", error: error });
     }
 });
 
