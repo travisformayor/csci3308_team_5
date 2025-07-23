@@ -47,6 +47,13 @@ h2 {
 p {
     margin: 10px 0;
 }
+textarea { /* for edit card mode */
+    resize: none;
+    min-width: 95%;
+    max-width: 95%;
+    min-height: 80%;
+    max-height: 80%;
+}
 
 /* ========================================
    Buttons
@@ -333,6 +340,10 @@ p {
     align-items: center;
     font-size: 20px;
     box-sizing: border-box;
+}
+
+.flashcard-edit {
+    align-items: stretch;
 }
 
 .flashcard p {
