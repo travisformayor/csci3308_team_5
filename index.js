@@ -104,8 +104,8 @@ if (process.env.NODE_ENV === 'test') {
     };
 } else {
     const dbConfig = {
-        host: 'db',
-        port: 5432,
+        host: process.env.POSTGRES_HOST || 'db',
+        port: process.env.POSTGRES_PORT || 5432,
         database: process.env.POSTGRES_DB,
         user: process.env.POSTGRES_USER,
         password: process.env.POSTGRES_PASSWORD,
@@ -600,5 +600,6 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
 module.exports = { app, db };
 
 if (require.main === module) {
-    app.listen(3000, '0.0.0.0', () => console.log('Server listening on port 3000'));
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on port ${PORT}`));
 }

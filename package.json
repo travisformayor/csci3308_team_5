@@ -4,8 +4,9 @@
   "description": "team class project",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm install",
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "predev": "npm install",
     "test": "mocha --recursive"
   },
   "author": "",
