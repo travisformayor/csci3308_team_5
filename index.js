@@ -48,6 +48,11 @@ app.use((req, res, next) => {
     next();
 });
 
+
+//serve static files from public directory
+app.use(express.static('public'));
+
+
 // Test environment
 if (process.env.NODE_ENV === 'test') {
     // Make session.save synchronous for tests
