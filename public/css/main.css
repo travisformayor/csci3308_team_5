@@ -47,7 +47,9 @@ h2 {
 p {
     margin: 10px 0;
 }
-textarea { /* for edit card mode */
+
+textarea {
+    /* for edit card mode */
     resize: none;
     min-width: 95%;
     max-width: 95%;
@@ -161,6 +163,7 @@ textarea { /* for edit card mode */
     margin-bottom: 20px;
     border: 1px solid transparent;
     border-radius: 4px;
+    text-align: center;
 }
 
 .message-success {
@@ -190,6 +193,7 @@ textarea { /* for edit card mode */
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 4px;
+    margin-top: -100px;
     padding: 30px;
     width: 100%;
     max-width: 400px;
