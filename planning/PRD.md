@@ -133,13 +133,13 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
 
 ## 8. Design Mockups
 
-### Home Page ([mockup/home.png](mockup/home.png))
+### Home Page ([home.png](../img/mockups/home.png))
 - **Page:** The landing page for unauthenticated users.
 - **Interactions:**
   - "Sign In" button
   - "Register" button
 
-### Sign In Page ([mockup/signin.png](mockup/signin.png))
+### Sign In Page ([signin.png](../img/mockups/signin.png))
 - **Page:** User login form.
 - **Interactions:**
   - Email input field
@@ -147,7 +147,7 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
   - "Sign In" button
   - "Don't have an account? Register" link
 
-### Register Page ([mockup/register.png](mockup/register.png))
+### Register Page ([register.png](../img/mockups/register.png))
 - **Page:** New user registration form.
 - **Interactions:**
   - Email input field
@@ -155,7 +155,7 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
   - "Register" button
   - "Already have an account? Sign in" link
 
-### Dashboard ([mockup/dashboard.png](mockup/dashboard.png))
+### Dashboard ([dashboard.png](../img/mockups/dashboard.png))
 - **Page:** Main view for authenticated users, listing their decks.
 - **Interactions:**
   - **Navbar:**
@@ -168,14 +168,14 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
     - "Edit" button
     - "Delete" button
 
-### Dashboard - Add Deck View ([mockup/dashboard-add-deck.png](mockup/dashboard-add-deck.png))
+### Dashboard - Add Deck View ([dashboard-add-deck.png](../img/mockups/dashboard-add-deck.png))
 - **Page:** A state of the dashboard page for adding a new deck.
 - **Interactions:**
   - Deck name input field
   - "Save" button
   - "Cancel" button
 
-### Edit Deck Page ([mockup/edit-card.png](mockup/edit-card.png))
+### Edit Deck Page ([edit-card.png](../img/mockups/edit-card.png))
 - **Page:** View for managing cards within a single deck, one card at a time.
 - **Interactions:**
   - **Navbar:** (Same as Dashboard)
@@ -188,7 +188,7 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
   - "Previous" button
   - "Next" button
 
-### Study Mode Page (`mockup/study-mode.png`)
+### Study Mode Page ([study-mode.png](../img/mockups/study-mode.png))
 - **Page:** Interface for studying a deck of flashcards.
 - **Interactions:**
   - **Navbar:** (Same as Dashboard)
