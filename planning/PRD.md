@@ -88,7 +88,7 @@ Server routes follow the server-side rendering (SSR) pattern.
 
 | Page Name | Route | Auth Required? | Description |
 | :--- | :--- | :--- | :--- |
-| **Home** | `/` | No | Landing page for unauthenticated users with options to sign in or register. |
+| **Home** | `/` | No | A landing page for unauthenticated users with options to sign in or register. |
 | **Login** | `/login` | No | Login form. |
 | **Register** | `/register` | No | Registration form. |
 | **Dashboard** | `/dashboard` | Yes | Lists decks and allows deck creation/deletion. |
@@ -130,8 +130,8 @@ Clicking "Logout" in the nav bar ends the session and redirects to the login scr
 
 ## 8. Design Mockups
 
-### Landing Page ([mockup/home.png](mockup/home.png))
-- **Page:** Landing page for unauthenticated users.
+### Home Page ([mockup/home.png](mockup/home.png))
+- **Page:** The landing page for unauthenticated users.
 - **Interactions:**
   - "Sign In" button
   - "Register" button
