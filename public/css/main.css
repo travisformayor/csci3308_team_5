@@ -163,6 +163,7 @@ textarea {
     margin-bottom: 20px;
     border: 1px solid transparent;
     border-radius: 4px;
+    text-align: center;
 }
 
 .message-success {
@@ -387,20 +388,20 @@ textarea {
 }
 
 /* ========================================
-   Study Mode
+   Edit Card and Study Mode
    ======================================== */
-.study-container {
+.card-container {
     margin: 10px auto;
     text-align: center;
 }
 
-.study-container h1 {
+.card-container h1 {
     margin-bottom: 15px;
     margin-top: 10px;
     font-size: 24px;
 }
 
-.study-content {
+.card-content {
     width: var(--card-width);
     margin: 0 auto;
 }
@@ -536,7 +537,7 @@ textarea {
         justify-content: center;
     }
 
-    .study-container {
+    .card-container {
         --card-width: 90vw;
     }
 }

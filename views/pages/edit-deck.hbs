@@ -1,7 +1,8 @@
-<div class="study-container">
-    <h1>Study Mode: {{deck.title}}</h1>
+{{> message }}
+<div class="card-container">
+    <h1>Edit Deck: {{deck.title}}</h1>
 
-    <div class="study-content">
+    <div class="card-content">
         <br>
 
         <div class="button-row">
@@ -49,8 +50,3 @@
         
     </div>
 </div>
-
-<script>
-    // Embed cards data into the page
-    const cards = {{{ json cards }}};
-</script>

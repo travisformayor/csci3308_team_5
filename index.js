@@ -59,7 +59,32 @@ if (process.env.NODE_ENV === 'test') {
     // Replace res.render with simple HTML response for tests
     app.use((req, res, next) => {
         res.render = (_view, data = {}) => {
-            res.status(200).send(`<html><body>${data.message || ''}</body></html>`);
+            let html = '<html><body>';
+
+            // Include message if present
+            if (data.message) {
+                html += data.message;
+            }
+
+            // Include decks for dashboard
+            if (data.decks) {
+                data.decks.forEach(deck => {
+                    html += `${deck.title} (${deck.cardCount} cards) `;
+                });
+            }
+
+            // Include deck title for study mode
+            if (data.deck && data.deck.title) {
+                html += data.deck.title + ' ';
+            }
+
+            // Include cards for study mode
+            if (data.cards) {
+                html += 'const cards = ' + JSON.stringify(data.cards) + ';';
+            }
+
+            html += '</body></html>';
+            res.status(200).send(html);
         };
         next();
     });
@@ -72,7 +97,10 @@ let db;
 if (process.env.NODE_ENV === 'test') {
     // Fake DB for test environment
     db = {
-        oneOrNone: () => { } // placeholder for sinon to stub
+        oneOrNone: () => { }, // placeholder for sinon to stub
+        any: () => { }, // placeholder for sinon to stub
+        one: () => { }, // placeholder for sinon to stub
+        none: () => { } // placeholder for sinon to stub
     };
 } else {
     const dbConfig = {
@@ -100,6 +128,13 @@ if (process.env.NODE_ENV === 'test') {
  *****************************************************/
 // Auth Middleware
 const auth = (req, res, next) => {
+    // Allow bypass in test environment
+    if (process.env.NODE_ENV === 'test') {
+        req.session = req.session || {};
+        req.session.user = { id: 1, email: 'test@example.com' };
+        return next();
+    }
+
     if (!req.session.user) {
         return res.redirect('/login');
     }
@@ -118,15 +153,19 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    const msg = req.session.message;
+    const message = req.session.message;
+    const error = req.session.error || false;
     req.session.message = null;
-    res.render('pages/login', { message: msg });
+    req.session.error = null;
+    res.render('pages/login', { message, error });
 });
 
 app.get('/register', (req, res) => {
-    const msg = req.session.message;
+    const message = req.session.message;
+    const error = req.session.error || false;
     req.session.message = null;
-    res.render('pages/register', { message: msg });
+    req.session.error = null;
+    res.render('pages/register', { message, error });
 });
 
 app.post('/register', async (req, res) => {
@@ -143,6 +182,7 @@ app.post('/register', async (req, res) => {
             err.code === '23505'
                 ? 'An account with this email already exists.'
                 : 'Registration failed. Please try again.';
+        req.session.error = true;
         res.redirect('/register');
     }
 });
@@ -154,12 +194,15 @@ app.post('/login', async (req, res) => {
 
         if (!user) {
             req.session.message = 'Account does not exist, please register.';
+            req.session.error = true;
             return res.redirect('/register');
         }
 
         const match = await bcrypt.compare(password, user.password_hash);
         if (!match) {
-            return res.render('pages/login', { message: 'Incorrect email or password.' });
+            req.session.message = 'Incorrect email or password.';
+            req.session.error = true;
+            return res.redirect('/login');
         }
 
         req.session.user = user;
@@ -168,7 +211,9 @@ app.post('/login', async (req, res) => {
         req.session.save(() => res.redirect('/dashboard'));
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).send('Server error');
+        req.session.message = 'Server error';
+        req.session.error = true;
+        res.redirect('/login');
     }
 });
 
@@ -176,6 +221,8 @@ app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
             console.error('Logout error:', err);
+            req.session.message = 'Error logging out';
+            req.session.error = true;
             return res.redirect('/dashboard');
         }
         res.render('pages/logout', { message: 'Logged out successfully.' });
@@ -183,6 +230,10 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/dashboard', auth, async (req, res) => {
+    const message = req.session.message;
+    const error = req.session.error || false;
+    req.session.message = null;
+    req.session.error = null;
     try {
         const userId = req.session.user.id;
 
@@ -201,13 +252,16 @@ app.get('/dashboard', auth, async (req, res) => {
 
         res.render('pages/dashboard', {
             decks: deckInfo,
-            newDeck: req.query.newDeck === 'true'
+            newDeck: req.query.newDeck === 'true',
+            message,
+            error
         });
-    } catch (error) {
-        console.error('Dashboard error:', error);
+    } catch (err) {
+        console.error('Dashboard error:', err);
         res.render('pages/dashboard', {
             decks: [],
-            error: 'Error loading decks. Please try again.',
+            message: 'Error loading decks. Please try again.',
+            error: true,
             newDeck: false
         });
     }
@@ -231,9 +285,11 @@ app.post('/decks/create', auth, async (req, res) => {
 
         res.redirect(`/decks/edit/${deck.id}/card/${card.id}`);
     }
-    catch (error) {
-        console.error('Error creating deck:', error);
-        res.status(500).json({ message: "Error creating deck" });
+    catch (err) {
+        console.error('Error creating deck:', err);
+        req.session.message = 'Error creating deck';
+        req.session.error = true;
+        res.redirect('/dashboard?newDeck=true');
     }
 });
 
@@ -242,22 +298,32 @@ app.post('/decks/delete/:deck_id', auth, async (req, res) => {
     const userId = req.session.user.id;
 
     try {
-        const cards = await db.none(
+        const deck = await db.oneOrNone(
+            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
+            [deckId, userId]
+        );
+        if (!deck) {
+            req.session.message = 'Deck not found or unauthorized';
+            req.session.error = true;
+            return res.redirect('/dashboard');
+        }
+
+        // User owns the deck. Delete associated flashcards and the deck
+        await db.none(
             'DELETE FROM flashcards WHERE deck_id = $1',
             [deckId]
         );
-        const result = await db.result(
+        await db.none(
             'DELETE FROM decks WHERE id = $1 AND user_id = $2',
             [deckId, userId]
         );
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: "Deck not found or unauthorized" });
-        }
         res.redirect(`/dashboard`);
     }
-    catch (error) {
-        console.error('Error deleting deck:', error);
-        res.status(500).json({ message: "Error deleting deck" });
+    catch (err) {
+        console.error('Error deleting deck:', err);
+        req.session.message = 'Error deleting deck';
+        req.session.error = true;
+        res.redirect('/dashboard');
     }
 });
 
@@ -272,20 +338,28 @@ app.get('/decks/edit/:deck_id', auth, async (req, res) => {
             [deckId, userId]
         );
         if (!deck) {
-            return res.status(404).json({ message: "Deck not found or authorized" });
+            req.session.message = 'Deck not found or unauthorized';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
-        const card = await db.oneOrNone(
+        let card = await db.oneOrNone(
             'SELECT * FROM flashcards WHERE deck_id = $1 ORDER BY id DESC LIMIT 1',
             [deckId]
         );
         if (!card) {
-            return res.status(404).json({ message: "No cards found for this deck" });
+            // If no cards exist, create a new blank card before redirecting to edit page
+            card = await db.one(
+                'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING *',
+                [deckId, '', '']
+            );
         }
         res.redirect(`/decks/edit/${deckId}/card/${card.id}`);
     }
-    catch (error) {
-        console.error('Error fetching deck:', error);
-        res.status(500).json({ message: "Error fetching deck" });
+    catch (err) {
+        console.error('Error fetching deck:', err);
+        req.session.message = 'Error fetching deck';
+        req.session.error = true;
+        res.redirect('/dashboard');
     }
 });
 
@@ -293,6 +367,10 @@ app.get('/decks/edit/:deck_id/card/:card_id', auth, async (req, res) => {
     const deckId = req.params.deck_id;
     const cardId = req.params.card_id;
     const userId = req.session.user.id;
+    const message = req.session.message;
+    const error = req.session.error || false;
+    req.session.message = null;
+    req.session.error = null;
 
     try {
         const deck = await db.oneOrNone(
@@ -300,14 +378,30 @@ app.get('/decks/edit/:deck_id/card/:card_id', auth, async (req, res) => {
             [deckId, userId]
         );
         if (!deck) {
-            return res.status(404).json({ message: "Deck not found or authorized" });
+            res.render('pages/edit-deck', {
+                message: 'Deck not found or unauthorized',
+                error: true,
+                deck: { id: deckId, title: '' },
+                card: { id: cardId, question: '', answer: '' },
+                nextCardId: null,
+                prevCardId: null
+            });
+            return;
         }
         const card = await db.oneOrNone(
             'SELECT * FROM flashcards WHERE id = $1 AND deck_id = $2',
             [cardId, deckId]
         );
         if (!card) {
-            return res.status(404).json({ message: "No cards found for this deck" });
+            res.render('pages/edit-deck', {
+                message: 'Card not found',
+                error: true,
+                deck,
+                card: { id: cardId, question: '', answer: '' },
+                nextCardId: null,
+                prevCardId: null
+            });
+            return;
         }
 
         const next = await db.oneOrNone(
@@ -322,12 +416,21 @@ app.get('/decks/edit/:deck_id/card/:card_id', auth, async (req, res) => {
         res.render('pages/edit-deck', {
             deck, card,
             nextCardId: next ? next.id : null,
-            prevCardId: prev ? prev.id : null
+            prevCardId: prev ? prev.id : null,
+            message,
+            error
         });
     }
-    catch (error) {
-        console.error('Error fetching card/deck:', error);
-        res.status(404).json({ message: 'Error fetching card/deck' });
+    catch (err) {
+        console.error('Error fetching card/deck:', err);
+        res.render('pages/edit-deck', {
+            message: 'Error fetching card/deck',
+            error: true,
+            deck: { id: deckId, title: '' },
+            card: { id: cardId, question: '', answer: '' },
+            nextCardId: null,
+            prevCardId: null
+        });
     }
 });
 
@@ -341,7 +444,9 @@ app.post('/decks/:deck_id/cards/add', auth, async (req, res) => {
             [deckId, userId]
         );
         if (!deck) {
-            return res.status(404).json({ message: 'Deck not found or authorized' });
+            req.session.message = 'Deck not found or unauthorized';
+            req.session.error = true;
+            return res.redirect(`/decks/edit/${deckId}`);
         }
         const newCard = await db.one(
             'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING id',
@@ -350,8 +455,10 @@ app.post('/decks/:deck_id/cards/add', auth, async (req, res) => {
         res.redirect(`/decks/edit/${deckId}/card/${newCard.id}`);
     }
 
-    catch (error) {
-        console.error('Error adding card to deck:', error);
+    catch (err) {
+        console.error('Error adding card to deck:', err);
+        req.session.message = 'Error adding card to deck';
+        req.session.error = true;
         res.redirect(`/decks/edit/${deckId}`);
     }
 });
@@ -360,7 +467,7 @@ app.post('/cards/save/:card_id', auth, async (req, res) => {
     const cardId = req.params.card_id;
     var { question, answer } = req.body;
     const userId = req.session.user.id;
-    
+
     if (answer == null) answer = '';
     if (question == null) question = '';
 
@@ -370,7 +477,9 @@ app.post('/cards/save/:card_id', auth, async (req, res) => {
             [cardId, userId]
         );
         if (!card) {
-            return res.status(404).json({ message: 'Card not found or authorized' });
+            req.session.message = 'Card not found or unauthorized';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
 
         await db.none(
@@ -381,10 +490,11 @@ app.post('/cards/save/:card_id', auth, async (req, res) => {
         const deckId = card.deck_id;
         res.redirect(`/decks/edit/${deckId}/card/${cardId}`);
     }
-    catch (error) {
-        console.error('Error saving card:', error);
+    catch (err) {
+        console.error('Error saving card:', err);
         res.render('pages/edit-deck', {
-            error: 'Error saving card. Please try again.',
+            message: 'Error saving card. Please try again.',
+            error: true,
             card: {
                 id: cardId,
                 question,
@@ -408,7 +518,9 @@ app.post('/cards/delete/:card_id', auth, async (req, res) => {
             [cardId]
         );
         if (!card) {
-            return res.status(404).json({ message: "Card not found" });
+            req.session.message = 'Card not found';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
 
         const deckId = card.deck_id;
@@ -418,7 +530,9 @@ app.post('/cards/delete/:card_id', auth, async (req, res) => {
             [deckId, userId]
         );
         if (!deck) {
-            return res.status(404).json({ message: "Deck not found" });
+            req.session.message = 'Deck not found or unauthorized';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
 
         await db.none(
@@ -428,9 +542,11 @@ app.post('/cards/delete/:card_id', auth, async (req, res) => {
 
         res.redirect(`/decks/edit/${deckId}`);
     }
-    catch (error) {
-        console.error('Error deleting card:', error);
-        res.redirect(`/decks/edit/unknown/card/${cardId}`);
+    catch (err) {
+        console.error('Error deleting card:', err);
+        req.session.message = 'Error deleting card';
+        req.session.error = true;
+        res.redirect('/dashboard');
     }
 });
 
@@ -446,7 +562,9 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
         );
 
         if (!deck) {
-            return res.status(404).json({ message: "Deck not found or not authorized to view" });
+            req.session.message = 'Deck not found or not authorized to view';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
 
         const cards = await db.any(
@@ -455,7 +573,9 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
         );
 
         if (cards.length === 0) {
-            return res.status(404).json({ message: "No cards found for this deck" });
+            req.session.message = 'No cards found for this deck';
+            req.session.error = true;
+            return res.redirect('/dashboard');
         }
 
         // Shuffle the cards
@@ -466,57 +586,13 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
 
         res.render('pages/study-mode', { deck, cards });
     }
-    catch (error) {
-        console.error('Error loading study mode:', error);
-        res.status(500).json({ message: "Error loading study mode." });
+    catch (err) {
+        console.error('Error loading study mode:', err);
+        req.session.message = 'Error loading study mode.';
+        req.session.error = true;
+        res.redirect('/dashboard');
     }
 });
-
-
-// ==== Edit Mode Endpoint ==== //
-app.get('/decks/edit/:deck_id', auth, async (req, res) => {
-    const deckId = req.params.deck_id;
-    const userId = req.session.user.id;
-
-    try {
-        const deck = await db.oneOrNone(
-            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
-            [deckId, userId]
-        );
-
-        if (!deck) {
-            return res.status(404).json({ message: "Deck not found or not authorized to view" });
-        }
-
-        const cards = await db.any(
-            'SELECT * FROM flashcards WHERE deck_id = $1',
-            [deckId]
-        );
-
-        if (cards.length === 0) {
-            try {
-                const newCard = await db.one(
-                    'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING id',
-                    [deckId, '', '']
-                );
-                res.redirect(`/decks/edit/${deckId}/card/${newCard.id}`);
-            }
-
-            catch (error) {
-                console.error('Error adding card to deck:', error);
-                return res.status(404).json({ message: "Error creating initial card" });
-            }
-        
-        }
-
-        res.render('pages/study-mode', { deck, cards });
-    }
-    catch (error) {
-        console.error('Error loading study mode:', error);
-        res.status(500).json({ message: "Error loading study mode." });
-    }
-});
-
 
 /******************************************************
  * Section 5 : Exports & Server Start

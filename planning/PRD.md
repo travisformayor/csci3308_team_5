@@ -86,6 +86,8 @@ Server routes follow the server-side rendering (SSR) pattern.
 
 ## 6. Views
 
+All views extend the `layouts/main.hbs` layout.
+
 | Page Name | Route | Auth Required? | Description |
 | :--- | :--- | :--- | :--- |
 | **Home** | `/` | No | A landing page for unauthenticated users with options to sign in or register. |
@@ -99,9 +101,10 @@ Server routes follow the server-side rendering (SSR) pattern.
 
 | Partial Name | File Path | Description | Used In |
 | :--- | :--- | :--- | :--- |
-| **Navbar** | `partials/navbar.hbs` | Navigation bar with links to Home, Dashboard, and Logout. | Dashboard, Card Editor, Study Mode |
-| **Deck Item** | `partials/deck-item.hbs` | Reusable template for a single deck entry, including title, Study/Edit/Delete buttons. | Dashboard |
-| **Error Message** | `partials/error.hbs` | Displays error messages. | Any page that handles form errors (e.g., Login, Register, Dashboard, Card Editor) |
+| **Navbar** | `partials/nav.hbs` | Navigation bar with links to Home, Dashboard, and Logout. | Dashboard, Card Editor, Study Mode |
+| **Message** | `partials/message.hbs` | Displays success or error messages. | Any page that handles form errors or success (e.g., Login, Register, Dashboard, Card Editor) |
+| **Head** | `partials/head.hbs` | HTML head content and metadata. | All pages via main layout |
+| **Footer** | `partials/footer.hbs` | Page footer. | All pages via main layout |
 
 ## 7. User Flows
 
