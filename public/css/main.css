@@ -179,9 +179,10 @@ textarea {
 }
 
 /* ========================================
-   Auth Pages
+   Auth and Home Pages
    ======================================== */
-.auth-page {
+.auth-page,
+.home-page {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -189,14 +190,16 @@ textarea {
     background-color: white;
 }
 
-.auth-card {
+.auth-card,
+.home-card {
+    margin-top: -100px;
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    margin-top: -100px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     padding: 30px;
     width: 100%;
-    max-width: 400px;
+    max-width: 675px;
 }
 
 .auth-link {
@@ -206,6 +209,78 @@ textarea {
 
 .auth-link:hover {
     text-decoration: underline;
+}
+
+.home-content {
+    display: flex;
+    align-items: flex-start;
+    /*  Align mascot with top of text */
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    /*  Align content left */
+}
+
+.mascot-img {
+    max-width: 200px;
+    height: auto;
+    flex-shrink: 0;
+    align-self: flex-start;
+    /*  Make sure mascot aligns to top */
+}
+
+.home-text {
+    flex: 1;
+    min-width: 250px;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/*  Stack all text left-aligned in a column */
+.home-text-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+}
+
+.home-title,
+.home-subtitle,
+.home-description {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.home-title {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    font-weight: 800;
+}
+
+.home-subtitle {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #34495e;
+}
+
+.home-description {
+    font-size: 1rem;
+    color: #555;
+}
+
+.home-button-group {
+    margin-top: 30px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
 }
 
 /* ========================================
@@ -417,6 +492,37 @@ textarea {
    Responsive
    ======================================== */
 @media (max-width: 600px) {
+    .home-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: left;
+    }
+
+    .mascot-img {
+        max-width: 150px;
+        align-self: center;
+    }
+
+    .home-text {
+        width: 100%;
+        text-align: left;
+        align-items: flex-start;
+    }
+
+    .home-text-row {
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .home-title {
+        font-size: 2rem;
+    }
+
+    .home-subtitle {
+        font-size: 1.1rem;
+    }
+
     .container {
         padding: 10px;
     }
