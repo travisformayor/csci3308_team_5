@@ -559,52 +559,6 @@ app.get('/decks/study/:deck_id', auth, async (req, res) => {
     }
 });
 
-
-// ==== Edit Mode Endpoint ==== //
-app.get('/decks/edit/:deck_id', auth, async (req, res) => {
-    const deckId = req.params.deck_id;
-    const userId = req.session.user.id;
-
-    try {
-        const deck = await db.oneOrNone(
-            'SELECT * FROM decks WHERE id = $1 AND user_id = $2',
-            [deckId, userId]
-        );
-
-        if (!deck) {
-            return res.status(404).json({ message: "Deck not found or not authorized to view" });
-        }
-
-        const cards = await db.any(
-            'SELECT * FROM flashcards WHERE deck_id = $1',
-            [deckId]
-        );
-
-        if (cards.length === 0) {
-            try {
-                const newCard = await db.one(
-                    'INSERT INTO flashcards (deck_id, question, answer) VALUES ($1, $2, $3) RETURNING id',
-                    [deckId, '', '']
-                );
-                res.redirect(`/decks/edit/${deckId}/card/${newCard.id}`);
-            }
-
-            catch (error) {
-                console.error('Error adding card to deck:', error);
-                return res.status(404).json({ message: "Error creating initial card" });
-            }
-        
-        }
-
-        res.render('pages/study-mode', { deck, cards });
-    }
-    catch (error) {
-        console.error('Error loading study mode:', error);
-        res.status(500).json({ message: "Error loading study mode." });
-    }
-});
-
-
 /******************************************************
  * Section 5 : Exports & Server Start
  *****************************************************/
