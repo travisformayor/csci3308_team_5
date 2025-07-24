@@ -44,6 +44,5 @@ INSERT INTO decks (user_id, title) VALUES (1, 'General Science');
 INSERT INTO flashcards (deck_id, question, answer) VALUES
 (2, 'What was the name of the mission that first landed humans on the Moon?', 'Apollo 11'),
 (2, 'What is photosynthesis?', 'The process by which plants use sunlight to make food and produce oxygen.'),
-(2, 'What is the boiling point of water at sea level in Celsius?', '100°C'),
-(2, 'Who developed the theory of general relativity?', 'Albert Einstein'),
-(2, 'What does the Pythagorean theorem state?', 'a² + b² = c² for right triangles.');
+(2, 'What is the boiling point of water at sea level in Celsius?', '100 C'),
+(2, 'Who developed the theory of general relativity?', 'Albert Einstein');
